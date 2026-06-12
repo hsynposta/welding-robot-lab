@@ -524,16 +524,20 @@ def build_figure():
         fig.update_yaxes(gridcolor=CH_GRID, row=r, col=cc,
                          minor=dict(showgrid=True, gridcolor=CH_GRIDMIN))
     if TRAJ_MODE:
-        fig.update_xaxes(title_text="X-position [m]", row=2, col=1)
-        fig.update_xaxes(title_text="X-position [m]", row=2, col=2)
-        fig.update_yaxes(title_text="Y-position [m]", scaleanchor="x2", scaleratio=1, row=2, col=1)
-        fig.update_yaxes(title_text="Y-position [m]", scaleanchor="x3", scaleratio=1, row=2, col=2)
+        for cc, xax in ((1, "x2"), (2, "x3")):
+            fig.update_xaxes(title_text="X-position [m]", constrain="domain", row=2, col=cc)
+            fig.update_yaxes(title_text="Y-position [m]", scaleanchor=xax, scaleratio=1,
+                             constrain="domain", row=2, col=cc)
     else:
+        # lock each panel to a square shape at any window size: pixels-per-unit on y
+        # is tied to x so the domain shrinks instead of the panel stretching
         (kL, labL, _), (kR, labR, _) = TIME_MODES[charts]
-        fig.update_xaxes(title_text="time [s]", range=[0, 5], row=2, col=1)
-        fig.update_xaxes(title_text="time [s]", range=[0, 5], row=2, col=2)
-        fig.update_yaxes(title_text=labL, range=list(yrange(kL)), row=2, col=1)
-        fig.update_yaxes(title_text=labR, range=list(yrange(kR)), row=2, col=2)
+        for cc, key, lab, xax in ((1, kL, labL, "x2"), (2, kR, labR, "x3")):
+            ylo, yhi = yrange(key)
+            fig.update_xaxes(title_text="time [s]", range=[0, 5], constrain="domain",
+                             row=2, col=cc)
+            fig.update_yaxes(title_text=lab, range=[ylo, yhi], constrain="domain",
+                             scaleanchor=xax, scaleratio=5.0 / (yhi - ylo), row=2, col=cc)
     return fig
 
 
@@ -617,6 +621,14 @@ with right:
                 f" <span style='font-size:13px;color:{DIM}'>{unit}</span></div>"
                 f"<div style='font-size:11px;color:{DIM}'>S1 · S2</div></div>")
 
+    def total_single(label, v, unit):
+        return (f"<div style='background:{CARD_BG};border:1px solid {CARD_BORDER};"
+                f"border-radius:8px;padding:9px 12px'>"
+                f"<div style='font-size:12px;color:{DIM}'>{label}</div>"
+                f"<div style='font-family:monospace;font-size:21px;font-weight:600;"
+                f"white-space:nowrap;color:{INK}'>{v}"
+                f" <span style='font-size:13px;color:{DIM}'>{unit}</span></div></div>")
+
     q1, q2 = st.columns(2)
     if both:
         q1.markdown(total_box("Total torque Q", fmt(s1["Q"]), fmt(s2["Q"]), "Nm"),
@@ -624,8 +636,10 @@ with right:
         q2.markdown(total_box("Power P = Q·θ̇", fmt(s1["P"]), fmt(s2["P"]), "W"),
                     unsafe_allow_html=True)
     else:
-        q1.metric("Total torque Q", f"{fmt(fs['Q'])} Nm")
-        q2.metric("Power P = Q·θ̇", f"{fmt(fs['P'])} W")
+        q1.markdown(total_single("Total torque Q", fmt(fs["Q"]), "Nm"),
+                    unsafe_allow_html=True)
+        q2.markdown(total_single("Power P = Q·θ̇", fmt(fs["P"]), "W"),
+                    unsafe_allow_html=True)
 
     if show_annual:
         st.subheader(f"Annual — fleet of {R:.0f}", divider="orange")
