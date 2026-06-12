@@ -20,8 +20,25 @@ st.markdown("<style>.block-container{max-width:1750px;margin:0 auto;}</style>",
             unsafe_allow_html=True)
 
 G = 9.81
-TARGETCOL, TIPCOL, TRACECOL = "#c8331f", "#e8920a", "#e8920a"
-LINKCOL = ["#1f5fc8", "#1f7a3d", "#e8920a"]
+
+# ---------------------------------------------------------------- theme palette
+_theme = getattr(st.context, "theme", None)
+DARK = getattr(_theme, "type", "light") == "dark"
+
+if DARK:
+    INK, DIM = "#e9eff6", "#9aabbd"
+    PAPER, BLUEPRINT = "#101828", "#0e1a2f"
+    GRID, GRIDMAJ, DATUM = "#1c2d4b", "#293d63", "#46587a"
+    ANN_BG = "rgba(13,20,34,0.92)"
+    TARGETCOL, TIPCOL, TRACECOL = "#ff6e57", "#f2a93b", "#f2a93b"
+    LINKCOL = ["#6fa9ff", "#46c47c", "#f2a93b"]
+else:
+    INK, DIM = "#16222e", "#5d6b78"
+    PAPER, BLUEPRINT = "white", "#eef4fb"
+    GRID, GRIDMAJ, DATUM = "#dae6f5", "#b3c9e6", "#9aa8b4"
+    ANN_BG = "rgba(255,255,255,0.92)"
+    TARGETCOL, TIPCOL, TRACECOL = "#c8331f", "#e8920a", "#e8920a"
+    LINKCOL = ["#1f5fc8", "#1f7a3d", "#e8920a"]
 
 
 # ---------------------------------------------------------------- kinematics
@@ -148,9 +165,9 @@ def stage_static():
         poly(0.55 * b * np.cos(np.linspace(0, np.pi, 24)),
              0.55 * b * np.sin(np.linspace(0, np.pi, 24)), "#c9ced4", "#5d5414"),
         sc(x=reach * np.cos(aa), y=reach * np.sin(aa), mode="lines",
-           line=dict(color="#b3c9e6", width=1, dash="dash")),
+           line=dict(color=GRIDMAJ, width=1, dash="dash")),
         sc(x=[-0.3 * reach, 1.18 * reach], y=[0, 0], mode="lines",
-           line=dict(color="#9aa8b4", width=1, dash="dash")),
+           line=dict(color=DATUM, width=1, dash="dash")),
     ]
     if SEAM:
         sy, x0, x1 = 0.55 * reach, -0.10 * reach, 0.75 * reach
@@ -204,8 +221,8 @@ def tip_callout(A, extra=""):
     x, y = p[nlink]
     return [dict(x=x, y=y, xref="x", yref="y", showarrow=True,
                  text=f"X={x:.2f}  Y={y:.2f} m" + extra,
-                 font=dict(color="#16222e", size=12, family="IBM Plex Mono, monospace"),
-                 bgcolor="rgba(255,255,255,0.92)", bordercolor=TIPCOL, borderwidth=1.2,
+                 font=dict(color=INK, size=12, family="IBM Plex Mono, monospace"),
+                 bgcolor=ANN_BG, bordercolor=TIPCOL, borderwidth=1.2,
                  borderpad=3, arrowcolor=TIPCOL, arrowwidth=1.2, ax=60, ay=-46)]
 
 
@@ -214,15 +231,15 @@ STAGE_H = STAGE_PH + STAGE_MT + STAGE_MB
 
 
 def stage_layout(fig):
-    fig.update_layout(plot_bgcolor="#eef4fb", paper_bgcolor="white",
+    fig.update_layout(plot_bgcolor=BLUEPRINT, paper_bgcolor=PAPER, font=dict(color=DIM),
                       margin=dict(l=10, r=10, t=STAGE_MT, b=STAGE_MB),
                       autosize=True, height=STAGE_H, showlegend=False, dragmode=False)
-    fig.update_xaxes(range=[-1.15 * reach, 1.30 * reach], gridcolor="#b3c9e6",
+    fig.update_xaxes(range=[-1.15 * reach, 1.30 * reach], gridcolor=GRIDMAJ,
                      zeroline=False, ticksuffix=" m", constrain="domain",
-                     minor=dict(showgrid=True, gridcolor="#dae6f5"))
-    fig.update_yaxes(range=[-0.30 * reach, 1.15 * reach], gridcolor="#b3c9e6",
+                     minor=dict(showgrid=True, gridcolor=GRID))
+    fig.update_yaxes(range=[-0.30 * reach, 1.15 * reach], gridcolor=GRIDMAJ,
                      zeroline=False, ticksuffix=" m", scaleanchor="x", scaleratio=1,
-                     constrain="domain", minor=dict(showgrid=True, gridcolor="#dae6f5"))
+                     constrain="domain", minor=dict(showgrid=True, gridcolor=GRID))
     return fig
 
 
@@ -285,7 +302,7 @@ def playback_figure():
         sliders=[dict(active=0, x=0.32, len=0.68, y=1.072, ticklen=0, minorticklen=0,
                       font=dict(size=1, color="rgba(0,0,0,0)"),
                       currentvalue=dict(prefix="t = ", suffix=" s",
-                                        font=dict(size=14, color="#16222e")),
+                                        font=dict(size=14, color=INK)),
                       pad=dict(t=2, b=4),
                       steps=[dict(method="animate", label=f"{poses[k][0]:.1f}",
                                   args=[[f"{k}"], dict(mode="immediate",

@@ -31,8 +31,30 @@ TV = np.linspace(0.0, 5.0, N)
 TVS = TV[::4]                   # down-sampled paths keep the figure light
 TRAPZ = getattr(np, "trapezoid", None) or np.trapz
 
-S1, S2 = "#c8331f", "#1f5fc8"
-COL_IN, COL_DA, COL_GR = "#c8331f", "#1f5fc8", "#1f7a3d"
+# ---------------------------------------------------------------- theme palette
+_theme = getattr(st.context, "theme", None)
+DARK = getattr(_theme, "type", "light") == "dark"
+
+if DARK:
+    INK, DIM = "#e9eff6", "#9aabbd"
+    PAPER, BLUEPRINT = "#101828", "#0e1a2f"
+    GRID, GRIDMAJ = "#1c2d4b", "#293d63"
+    CH_GRID, CH_GRIDMIN = "#21304f", "#182742"
+    CARD_BG, CARD_BORDER = "#1c2638", "#2b3a55"
+    ANN_BG, DATUM = "rgba(13,20,34,0.92)", "#46587a"
+    PATH_FAINT, NOWLINE = "#3a4c6b", "#46587a"
+    S1, S2 = "#ff6e57", "#6fa9ff"
+    COL_IN, COL_DA, COL_GR = "#ff6e57", "#6fa9ff", "#46c47c"
+else:
+    INK, DIM = "#16222e", "#5d6b78"
+    PAPER, BLUEPRINT = "white", "#eef4fb"
+    GRID, GRIDMAJ = "#dae6f5", "#b3c9e6"
+    CH_GRID, CH_GRIDMIN = "#dde4ea", "#eef2f6"
+    CARD_BG, CARD_BORDER = "#f3f6f9", "#d5dde4"
+    ANN_BG, DATUM = "rgba(255,255,255,0.92)", "#9aa8b4"
+    PATH_FAINT, NOWLINE = "#c4cfd9", "#b9c4ce"
+    S1, S2 = "#c8331f", "#1f5fc8"
+    COL_IN, COL_DA, COL_GR = "#c8331f", "#1f5fc8", "#1f7a3d"
 DARKLINE = "#1f262d"
 
 
@@ -178,10 +200,10 @@ st.caption("ENG3032 · Sustainable Systems & Industry 4.0 — single-joint arm �
 
 def chain_node(label, formula, v1, v2=None):
     second = f"<div style='color:{S2};font-family:monospace;font-size:13px;font-weight:600'>{v2}</div>" if v2 else ""
-    vcol = S1 if v2 else "#16222e"
-    return (f"<div style='border:1px solid #d5dde4;border-bottom:4px solid #e8920a;"
-            f"border-radius:8px;padding:9px 12px;background:var(--background-color,#fff)'>"
-            f"<div style='font-size:10.5px;letter-spacing:1.3px;color:#5d6b78;"
+    vcol = S1 if v2 else INK
+    return (f"<div style='border:1px solid {CARD_BORDER};border-bottom:4px solid #e8920a;"
+            f"border-radius:8px;padding:9px 12px;background:{CARD_BG}'>"
+            f"<div style='font-size:10.5px;letter-spacing:1.3px;color:{DIM};"
             f"text-transform:uppercase'>{label}</div>"
             f"<div style='font-family:monospace;font-size:17px;font-weight:600'>{formula}</div>"
             f"<div style='color:{vcol};font-family:monospace;font-size:13px;font-weight:600'>{v1}</div>{second}</div>")
@@ -296,13 +318,13 @@ def gauge_anim(ft):
     gx, gy = lg / 2 * np.cos(th), lg / 2 * np.sin(th)
     return [
         sc(x=0.30 * lg * np.cos(aa), y=0.30 * lg * np.sin(aa), mode="lines",
-           line=dict(color="#c8331f", width=2)),
+           line=dict(color=COL_IN, width=2)),
         sc(x=[0.46 * lg * np.cos(th / 2)], y=[0.46 * lg * np.sin(th / 2)], mode="text",
            text=[f"θ = {th:.2f} rad"],
-           textfont=dict(color="#c8331f", size=12.5, family="IBM Plex Mono, monospace")),
+           textfont=dict(color=COL_IN, size=12.5, family="IBM Plex Mono, monospace")),
         # dashed projections from the tip onto the X and Y axes
         sc(x=[x, x, np.nan, x, 0], y=[y, 0, np.nan, y, y], mode="lines",
-           line=dict(color="#5d6b78", width=1, dash="dot")),
+           line=dict(color=DIM, width=1, dash="dot")),
         sc(x=[gx, gx], y=[gy, gy - 0.26 * lg], mode="lines",
            line=dict(color=COL_GR, width=2.5)),
         sc(x=[gx], y=[gy - 0.26 * lg], mode="markers+text", text=["mg"],
@@ -333,11 +355,11 @@ def charts_static():
         for w, ax, ay in ((1, "x2", "y2"), (2, "x3", "y3")):
             f = series(w)
             T.append(sc(ax, ay, x=f["x"], y=f["y"], mode="lines",
-                        line=dict(color="#c4cfd9", width=1.5, dash="dot")))
+                        line=dict(color=PATH_FAINT, width=1.5, dash="dot")))
             T.append(sc(ax, ay, x=[f["x"][0], f["x"][-1]], y=[f["y"][0], f["y"][-1]],
                         mode="markers+text", text=["initial", "final"],
-                        textposition="middle right", textfont=dict(size=11, color="#5d6b78"),
-                        marker=dict(size=8, color=["#1f7a3d", "#c8331f"],
+                        textposition="middle right", textfont=dict(size=11, color=DIM),
+                        marker=dict(size=8, color=[COL_GR, COL_IN],
                                     line=dict(color="#16222e", width=1))))
     else:
         (kL, _, _), (kR, _, _) = TIME_MODES[charts]
@@ -369,7 +391,7 @@ def charts_anim(ft):
         for key, ax, ay in ((kL, "x2", "y2"), (kR, "x3", "y3")):
             ylo, yhi = yrange(key)
             T.append(sc(ax, ay, x=[ft, ft], y=[ylo, yhi], mode="lines",
-                        line=dict(color="#b9c4ce", width=1.5, dash="dash")))
+                        line=dict(color=NOWLINE, width=1.5, dash="dash")))
             T.append(sc(ax, ay, x=[ft, ft], y=[sA[key], sB[key]], mode="markers",
                         marker=dict(color=[S1, S2], size=10,
                                     line=dict(color="#16222e", width=1))))
@@ -413,7 +435,7 @@ def build_figure():
 
     # subplot titles are annotations — style them, then keep them as the base layer
     for a in fig.layout.annotations:
-        a.font = dict(size=13, color="#16222e")
+        a.font = dict(size=13, color=INK)
     base_ann = [a.to_plotly_json() for a in fig.layout.annotations]
 
     def callouts(ft):
@@ -425,7 +447,7 @@ def build_figure():
             ann.append(dict(x=s["x"], y=s["y"], xref="x", yref="y", showarrow=True,
                             text=f"X={s['x']:.2f}  Y={s['y']:.2f} m",
                             font=dict(color=col, size=12, family="IBM Plex Mono, monospace"),
-                            bgcolor="rgba(255,255,255,0.92)", bordercolor=col,
+                            bgcolor=ANN_BG, bordercolor=col,
                             borderwidth=1.2, borderpad=3, arrowcolor=col, arrowwidth=1.2,
                             ax=72, ay=46 if single else (42 if w == 1 else 90)))
             # live HUD: pinned to the empty sky band at the very top — the tip
@@ -436,7 +458,7 @@ def build_figure():
                                   f"θ̈={s['dd']:.3f} rad/s² · Q={s['Q']:,.0f} Nm · "
                                   f"P={s['P']:,.0f} W"),
                             font=dict(color=col, size=12, family="IBM Plex Mono, monospace"),
-                            bgcolor="rgba(255,255,255,0.95)", bordercolor=col,
+                            bgcolor=ANN_BG, bordercolor=col,
                             borderwidth=1.2, borderpad=4))
         if single:
             th = at(SCEN[0], ft)["th"]
@@ -445,7 +467,7 @@ def build_figure():
                             xref="x", yref="y", showarrow=False,
                             text=f"l = {lg:.2f} m", textangle=float(-np.degrees(th)),
                             xshift=float(-16 * np.sin(th)), yshift=float(16 * np.cos(th)),
-                            font=dict(size=11, color="#39434d",
+                            font=dict(size=11, color=DIM,
                                       family="IBM Plex Mono, monospace")))
         return ann
 
@@ -473,32 +495,34 @@ def build_figure():
                       y=1.06, ticklen=0, minorticklen=0,
                       font=dict(size=1, color="rgba(0,0,0,0)"),
                       currentvalue=dict(prefix="t = ", suffix=" s",
-                                        font=dict(size=14, color="#16222e")),
+                                        font=dict(size=14, color=INK)),
                       pad=dict(t=2, b=4),
                       steps=[dict(method="animate", label=f"{ft:.1f}",
                                   args=[[f"{ft:.1f}"],
                                         dict(mode="immediate", frame=dict(duration=0, redraw=True))])
                              for ft in fts])],
-        plot_bgcolor="#eef4fb", paper_bgcolor="white",
-        legend=dict(orientation="h", x=0.5, xanchor="center", y=-0.062, font=dict(size=12)),
+        plot_bgcolor=BLUEPRINT, paper_bgcolor=PAPER,
+        font=dict(color=DIM),
+        legend=dict(orientation="h", x=0.5, xanchor="center", y=-0.062,
+                    font=dict(size=12, color=INK)),
         autosize=True, height=H,
         margin=dict(l=ML, r=MR, t=MT, b=MB), showlegend=not TRAJ_MODE)
 
     # schematic axes: true 1:1 aspect — never squashed, whatever the screen width
-    fig.update_xaxes(range=[-0.85 * LR, 1.60 * LR], gridcolor="#b3c9e6", zeroline=False,
+    fig.update_xaxes(range=[-0.85 * LR, 1.60 * LR], gridcolor=GRIDMAJ, zeroline=False,
                      ticksuffix=" m", constrain="domain",
-                     minor=dict(showgrid=True, gridcolor="#dae6f5"), row=1, col=1)
-    fig.update_yaxes(range=[-0.55 * LR, 1.45 * LR], gridcolor="#b3c9e6", zeroline=False,
+                     minor=dict(showgrid=True, gridcolor=GRID), row=1, col=1)
+    fig.update_yaxes(range=[-0.55 * LR, 1.45 * LR], gridcolor=GRIDMAJ, zeroline=False,
                      ticksuffix=" m", scaleanchor="x", scaleratio=1, constrain="domain",
-                     minor=dict(showgrid=True, gridcolor="#dae6f5"), row=1, col=1)
-    fig.add_hline(y=0, line_dash="dash", line_color="#9aa8b4", line_width=1, row=1, col=1)
+                     minor=dict(showgrid=True, gridcolor=GRID), row=1, col=1)
+    fig.add_hline(y=0, line_dash="dash", line_color=DATUM, line_width=1, row=1, col=1)
 
     # chart axes — square panels with fine minor grids for detail
     for r, cc in ((2, 1), (2, 2)):
-        fig.update_xaxes(gridcolor="#dde4ea", row=r, col=cc,
-                         minor=dict(showgrid=True, gridcolor="#eef2f6"))
-        fig.update_yaxes(gridcolor="#dde4ea", row=r, col=cc,
-                         minor=dict(showgrid=True, gridcolor="#eef2f6"))
+        fig.update_xaxes(gridcolor=CH_GRID, row=r, col=cc,
+                         minor=dict(showgrid=True, gridcolor=CH_GRIDMIN))
+        fig.update_yaxes(gridcolor=CH_GRID, row=r, col=cc,
+                         minor=dict(showgrid=True, gridcolor=CH_GRIDMIN))
     if TRAJ_MODE:
         fig.update_xaxes(title_text="X-position [m]", row=2, col=1)
         fig.update_xaxes(title_text="X-position [m]", row=2, col=2)
@@ -569,7 +593,7 @@ with right:
                 f"font-family:monospace;font-size:13px;margin:3px 0'>"
                 f"<span style='width:10px;height:10px;border-radius:2px;background:{sw};"
                 f"flex:none;position:relative;top:1px'></span>"
-                f"<span style='flex:1'>{label} <small style='color:#5d6b78'>{hint}</small></span>"
+                f"<span style='flex:1'>{label} <small style='color:{DIM}'>{hint}</small></span>"
                 f"<span>{val}</span></div>")
 
     if both:
@@ -584,13 +608,14 @@ with right:
 
     def total_box(label, v1, v2, unit):
         """Two-scenario total that never truncates (st.metric clips long values)."""
-        return (f"<div style='background:#eef1f5;border-radius:8px;padding:9px 12px'>"
-                f"<div style='font-size:12px;color:#5d6b78'>{label}</div>"
+        return (f"<div style='background:{CARD_BG};border:1px solid {CARD_BORDER};"
+                f"border-radius:8px;padding:9px 12px'>"
+                f"<div style='font-size:12px;color:{DIM}'>{label}</div>"
                 f"<div style='font-family:monospace;font-size:19px;font-weight:600;"
                 f"white-space:nowrap'><span style='color:{S1}'>{v1}</span>"
                 f" · <span style='color:{S2}'>{v2}</span>"
-                f" <span style='font-size:13px;color:#5d6b78'>{unit}</span></div>"
-                f"<div style='font-size:11px;color:#5d6b78'>S1 · S2</div></div>")
+                f" <span style='font-size:13px;color:{DIM}'>{unit}</span></div>"
+                f"<div style='font-size:11px;color:{DIM}'>S1 · S2</div></div>")
 
     q1, q2 = st.columns(2)
     if both:
